@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     char            *target_user_name;
     struct passwd   *target_pw;
     struct spwd     *target_spw;
-    char            *password_prompt;
+    char             password_prompt[100];
     char            *entered_password;
     char            *encrypted_password;
 
@@ -77,10 +77,8 @@ int main(int argc, char **argv)
     }
 
     // Time for authentication!
-    password_prompt = (char *) malloc(100); // Kind of an overkill, right? 
-                                            // Maybe password_prompt[100]; would have been enough lol.
-    snprintf(password_prompt, 100, "Password for %s: ", target_user_name);
-
+    snprintf(password_prompt, sizeof(password_prompt), "Password for %s: ", target_user_name);
+    
     // WARNING: getpass is obsolete and unsafe, but simple.
     entered_password = getpass(password_prompt);
 
@@ -118,11 +116,36 @@ int main(int argc, char **argv)
     setenv("LOGNAME", target_pw->pw_name, 1);
     setenv("SHELL", target_pw->pw_shell, 1);
 
+    // So, while we could do execlp directly and it would work, we have an extra step.
+    // A login shell is specified by prepending a '-' to argv[0].
+    // This makes the shell source profile scripts like ~/.bash_profile.
+
+    // First, find the base name of the shell.
+    // For example, "bash" from "/bin/bash".
+    char *shell_name = strrchr(target_pw->pw_shell, '/');
+    if (NULL == shell_name)
+    {
+        shell_name = target_pw->pw_shell;
+    }
+    else
+    {
+        shell_name++;
+    }
+
+    char *login_shell_arg = malloc(strlen(shell_name) + 2); // For '-' and '\0'
+    if (login_shell_arg == NULL)
+    {
+        perror("malloc failed");
+        return 1;
+    }
+    sprintf(login_shell_arg, "-%s", shell_name);
+
     // The first argument is the program,
     // the second is how it sees itself (argv[0]),
     // the NULL terminates the argument list.
-    execlp(target_pw->pw_shell, target_pw->pw_shell, (char *)NULL);
+    execlp(target_pw->pw_shell, login_shell_arg, (char *)NULL);
 
     perror("execlp failed");
+    free(login_shell_arg);    // ALWAYS free memory used.
     return 1;
 }
