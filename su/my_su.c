@@ -12,8 +12,6 @@
 //              -rwsr-xr-x 1 root root 16928 Aug 25 00:12 my_su
 //  It's ready! We want the 's' (for setuid) to be present.
 
-#define _GNU_SOURCE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
