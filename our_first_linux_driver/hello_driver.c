@@ -1,4 +1,10 @@
 /*
+ * Install kernel headers (Debian/Ubuntu):
+ * sudo apt install linux-headers-$(uname -r)
+ *
+ * Compile:
+ * make
+ *
  * Load the driver:
  * sudo insmod hello_driver.ko
  *
@@ -10,6 +16,9 @@
  *
  * Check the log again:
  * dmesg | tail 
+ *
+ * Clean:
+ * make clean
  */
 
 #include <linux/init.h>
